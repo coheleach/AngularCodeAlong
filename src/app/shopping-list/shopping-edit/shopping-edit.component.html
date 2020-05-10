@@ -28,7 +28,7 @@
                 <div class="col-xs-12">
                     <button type="submit" class="btn btn-success" [disabled]="!form.valid">{{ !this.editMode ? 'Add' : 'Update'}}</button>
                     <button type="button" class="btn btn-danger">Delete</button>
-                    <button type="button" class="btn btn-primary">Clear</button>
+                    <button type="button" (click)="onClear()" class="btn btn-primary">Clear</button>
                 </div>
             </div>
         </form>

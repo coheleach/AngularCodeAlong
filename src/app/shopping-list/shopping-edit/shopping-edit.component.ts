@@ -48,6 +48,10 @@ export class ShoppingEditComponent implements OnInit, OnDestroy {
     this.clearForm();
   }
 
+  onClear() {
+    this.clearForm();
+  }
+
   clearForm() {
     this.editedItemIndex = -1;
     this.editedIngredient = null;
