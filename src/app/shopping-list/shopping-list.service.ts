@@ -17,6 +17,10 @@ export class ShoppingListService {
     getIngredients() {
         return this.ingredients.slice();
     }
+
+    getIngredient(index: number) {
+        return this.ingredients[index];
+    }
     
     //TODO: configure crud configurations for array 
     addIngredient(ingredient: Ingredient) {
@@ -31,6 +35,11 @@ export class ShoppingListService {
 
     editIngredient(index: number) {
         this.ingredientSelected.next(index);
+    }
+
+    updateIngredient(index: number, newIngredient: Ingredient) {
+        this.ingredients[index] = newIngredient;
+        this.ingredientsChanged.next(this.getIngredients());
     }
 
     //TODO: replace events
