@@ -6,6 +6,7 @@ import {Subject} from 'rxjs';
 export class ShoppingListService {
 
     ingredientsChanged = new Subject<Ingredient[]>();
+    ingredientSelected = new Subject<number>();
 
     //TODO: Add centralized array of Shopping List items
     private ingredients: Ingredient[] = [
@@ -26,6 +27,10 @@ export class ShoppingListService {
     addIngredients(ingredients: Ingredient[]) {
         this.ingredients = this.ingredients.concat(ingredients);
         this.ingredientsChanged.next(this.getIngredients());
+    }
+
+    editIngredient(index: number) {
+        this.ingredientSelected.next(index);
     }
 
     //TODO: replace events
