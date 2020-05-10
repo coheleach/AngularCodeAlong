@@ -6,6 +6,7 @@ import {Subject} from 'rxjs';
 export class ShoppingListService {
 
     ingredientsChanged = new Subject<Ingredient[]>();
+    ingredientSelected = new Subject<number>();
 
     //TODO: Add centralized array of Shopping List items
     private ingredients: Ingredient[] = [
@@ -16,6 +17,10 @@ export class ShoppingListService {
     getIngredients() {
         return this.ingredients.slice();
     }
+
+    getIngredient(index: number) {
+        return this.ingredients[index];
+    }
     
     //TODO: configure crud configurations for array 
     addIngredient(ingredient: Ingredient) {
@@ -25,6 +30,20 @@ export class ShoppingListService {
 
     addIngredients(ingredients: Ingredient[]) {
         this.ingredients = this.ingredients.concat(ingredients);
+        this.ingredientsChanged.next(this.getIngredients());
+    }
+
+    editIngredient(index: number) {
+        this.ingredientSelected.next(index);
+    }
+
+    updateIngredient(index: number, newIngredient: Ingredient) {
+        this.ingredients[index] = newIngredient;
+        this.ingredientsChanged.next(this.getIngredients());
+    }
+
+    deleteIngredient(index: number) {
+        this.ingredients.splice(index, 1);
         this.ingredientsChanged.next(this.getIngredients());
     }
 
