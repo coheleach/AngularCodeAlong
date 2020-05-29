@@ -1,13 +1,11 @@
 import { Recipe } from '../recipes/recipe.model';
-import { Subject } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { RecipesService } from '../recipes/recipes.service';
+import { map, tap } from 'rxjs/operators';
 
 @Injectable({providedIn: 'root'})
 export class DataStorageService {
-
-    recipesCollected = new Subject<Recipe[]>();
 
     constructor(private httpClient: HttpClient, 
                 private recipesService: RecipesService) {} 
@@ -21,5 +19,20 @@ export class DataStorageService {
         .subscribe(serverResponse => {
             console.log(serverResponse);
         })
+    }
+
+    fetchRecipes() {
+        return this.httpClient.get<Recipe[]>(
+            'https://ng-course-recipe-book-ed9b7.firebaseio.com/recipes.json'
+        )
+        .pipe(map(serverResponseBody => {
+             return serverResponseBody.map(recipeElement => {
+                return {...recipeElement, 
+                    ingredients: recipeElement['ingredients'] ? recipeElement['ingredients'] : []};
+            })
+        }),
+        tap(recipes => {
+            this.recipesService.setRecipes(recipes);
+        }));
     }
 }
