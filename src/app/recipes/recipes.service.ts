@@ -1,4 +1,4 @@
-import {Injectable, EventEmitter} from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Recipe } from './recipe.model';
 import { Ingredient } from '../Shared/ingredient.model';
 import { ShoppingListService } from '../shopping-list/shopping-list.service';
@@ -9,27 +9,29 @@ export class RecipesService {
     
     recipesChanged = new Subject<Recipe[]>();
 
-    private recipes: Recipe[] = [
-        new Recipe(
-            'Moroccan Chickpea Bowl', 
-            'mildly filling plate of chickpeas',
-            'https://pinchofyum.com/wp-content/uploads/Moroccan-Chickpea-Bowls-Recipe.jpg',
-            [
-                new Ingredient('Chickpea', 18),
-                new Ingredient('Pita slice', 3),
-                new Ingredient('Cucumber', 1)
-            ]
-            ),
-        new Recipe(
-        'Kung Pao Chicken', 
-        'Sweet & Sour Chicken with Sesame Seeds',
-        'https://www.rockrecipes.com/wp-content/uploads/2012/04/Double-Crunch-Honey-Garlic-Chicken-Breasts-edit2-1.jpg',
-        [
-            new Ingredient('Chicken Lump', 9),
-            new Ingredient('Sesame Seed', 82)
-        ]
-      )
-    ];
+    private recipes: Recipe[] = [];
+
+    // private recipes: Recipe[] = [
+    //     new Recipe(
+    //         'Moroccan Chickpea Bowl', 
+    //         'mildly filling plate of chickpeas',
+    //         'https://pinchofyum.com/wp-content/uploads/Moroccan-Chickpea-Bowls-Recipe.jpg',
+    //         [
+    //             new Ingredient('Chickpea', 18),
+    //             new Ingredient('Pita slice', 3),
+    //             new Ingredient('Cucumber', 1)
+    //         ]
+    //         ),
+    //     new Recipe(
+    //     'Kung Pao Chicken', 
+    //     'Sweet & Sour Chicken with Sesame Seeds',
+    //     'https://www.rockrecipes.com/wp-content/uploads/2012/04/Double-Crunch-Honey-Garlic-Chicken-Breasts-edit2-1.jpg',
+    //     [
+    //         new Ingredient('Chicken Lump', 9),
+    //         new Ingredient('Sesame Seed', 82)
+    //     ]
+    //   )
+    // ];
     
     constructor(private shoppingListService: ShoppingListService) {}
  
@@ -40,6 +42,11 @@ export class RecipesService {
 
     getRecipe(index: number) {
         return this.recipes[index];
+    }
+
+    setRecipes(recipes: Recipe[]) {
+        this.recipes = recipes;
+        this.recipesChanged.next(this.getRecipes());
     }
 
     addIngredientsToShoppingList(ingredients: Ingredient[]) {
