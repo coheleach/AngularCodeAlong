@@ -18,11 +18,10 @@ export class AuthService {
         return this.httpClient.post<SignupResponsePayload>(
             'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyBJRCutoN10m5ocS35VMGem-SJv6cW62r4',
             {
-                params: new HttpParams()
-                    .append('email', email)
-                    .append('password', password)
-                    .append('returnSecureToken', 'true')
+                email: email,
+                password: password,
+                returnSecureToken: true
             }
-        )
+        );
     }
 }

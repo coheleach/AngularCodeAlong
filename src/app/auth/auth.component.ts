@@ -18,16 +18,17 @@ export class AuthComponent {
     }
 
     onSubmit(form: NgForm) {
+
         console.log(form.value);
         this.isLoading = true;
         if(this.isLoginMode) {
-
+            // ...
         } else {
             this.authService.signUp(form.value.email, form.value.password)
                 .subscribe(responseBody => {
-                    
+                    console.log(responseBody);
                 }, error => {
-
+                    console.log(error);
                 })
         }
         
