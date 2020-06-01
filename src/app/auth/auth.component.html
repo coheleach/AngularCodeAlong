@@ -22,7 +22,10 @@
                     required
                     minlength="6">
             </div>
-            <div>
+            <div *ngIf="isLoading">
+                <p>Loading...</p>
+            </div>
+            <div *ngIf="!isLoading">
                 <button type="submit" class="btn btn-primary" [disabled]="!form.valid">{{ isLoginMode ? 'Login' : 'Sign Up' }}</button>
                 |
                 <button 
