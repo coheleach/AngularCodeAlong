@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { pipe, throwError } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 class SignupResponsePayload {
@@ -34,18 +34,9 @@ export class AuthService {
                 returnSecureToken: true
             }
         )
-        .pipe(catchError(error => {
-            let errorMessage = 'An unknown error ocurred';
-            if(!error.error || !error.error.error) {
-                return throwError(errorMessage);
-            }
-            switch(error.error.error.message) {
-                case 'EMAIL_EXISTS':
-                    errorMessage = 'The email address is already in use by another account.';
-                    break;
-            }
-            return throwError(errorMessage);
-        }))
+        .pipe(catchError((error: HttpErrorResponse) => {
+            return this.handleSignupLoginError(error)
+        }));
     }
 
     login(email: string, password: string) {
@@ -57,19 +48,26 @@ export class AuthService {
                 returnSecureToken: true
             }
         )
-        .pipe(catchError(error => {
-            let errorMessage = 'An unknown error ocurred';
-            if(!error.error || !error.error.error) {
-                return throwError(errorMessage);
-            }
-            switch(error.error.error.message) {
-                case 'EMAIL_NOT_FOUND':
-                    errorMessage = 'No account was found with this email';
-                    break;
-                case 'INVALID_PASSWORD':
-                    errorMessage = 'Incorrect Password';
-            }
-            return throwError(errorMessage);
+        .pipe(catchError((error: HttpErrorResponse) => {
+            return this.handleSignupLoginError(error)
         }))
     }
+
+    private handleSignupLoginError(httpErrorResponse: HttpErrorResponse) {
+        let errorMessage = 'An unknown error ocurred';
+        if(!httpErrorResponse.error || !httpErrorResponse.error.error) {
+            return throwError(errorMessage);
+        }
+        switch(httpErrorResponse.error.error.message) {
+            case 'EMAIL_EXISTS':
+                errorMessage = 'The email address is already in use by another account.';
+                break;
+            case 'EMAIL_NOT_FOUND':
+                errorMessage = 'No account was found with this email';
+                break;
+            case 'INVALID_PASSWORD':
+                errorMessage = 'Incorrect Password'
+        }
+        return throwError(errorMessage);
+     }
 }

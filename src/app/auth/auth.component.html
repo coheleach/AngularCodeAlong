@@ -27,9 +27,6 @@
                     required
                     minlength="6">
             </div>
-            <div *ngIf="isLoading">
-                <p>Loading...</p>
-            </div>
             <div>
                 <button type="submit" class="btn btn-primary" [disabled]="!form.valid">{{ isLoginMode ? 'Login' : 'Sign Up' }}</button>
                 |
