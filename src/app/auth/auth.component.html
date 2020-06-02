@@ -4,11 +4,9 @@
             <app-loading-spinner *ngIf="isLoading" style="text-align: center;"></app-loading-spinner>
         </div>
         <div class="alert alert-danger" *ngIf="error">
-            <h3>{{error.message}}</h3>
-            <br/>
-            <button type="button" class="btn btn-secondary" (click)="onConfirmError()">Ok</button>
+            <h3>{{error}}</h3>
         </div>
-        <form #form="ngForm" (ngSubmit)="onSubmit(form)" *ngIf="!isLoading && !error">
+        <form #form="ngForm" (ngSubmit)="onSubmit(form)" *ngIf="!isLoading">
             <div class="form-group">
                 <label for="email">E-Mail</label>
                 <input 
@@ -32,7 +30,7 @@
             <div *ngIf="isLoading">
                 <p>Loading...</p>
             </div>
-            <div *ngIf="!isLoading">
+            <div>
                 <button type="submit" class="btn btn-primary" [disabled]="!form.valid">{{ isLoginMode ? 'Login' : 'Sign Up' }}</button>
                 |
                 <button 
