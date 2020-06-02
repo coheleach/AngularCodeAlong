@@ -10,6 +10,7 @@ export class AuthComponent {
     
     isLoginMode = true;
     isLoading = false;
+    error = null;
 
     constructor(private authService: AuthService) {}
 
@@ -29,10 +30,15 @@ export class AuthComponent {
                     console.log(responseBody);
                 }, error => {
                     console.log(error);
+                    this.error = error.error.error;
                 })
         }
         
         this.isLoading = false;
         form.reset();
+    }
+
+    onConfirmError() {
+        this.error = null;
     }
 }
