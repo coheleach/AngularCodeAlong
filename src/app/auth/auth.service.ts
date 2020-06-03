@@ -1,32 +1,27 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { throwError, Subject } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
+import { User } from './user.model';
 
-class SignupResponsePayload {
+class LoginSignUpResponsePayload {
     idToken: string
     email: string
     refreshToken: string
     expiresIn: string
     localId: string
-}
-
-class SignInResponsePayload  {
-    idToken: string
-    email: string
-    refreshToken: string
-    expiresIn: string
-    localId: string
-    registered: boolean
+    registered?: boolean
 }
 
 @Injectable({providedIn: 'root'})
 export class AuthService {
 
+    user: Subject<User>;
+
     constructor(private httpClient: HttpClient) {}
 
     signUp(email: string, password: string) {
-        return this.httpClient.post<SignupResponsePayload>(
+        return this.httpClient.post<LoginSignUpResponsePayload>(
             'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyBJRCutoN10m5ocS35VMGem-SJv6cW62r4',
             {
                 email: email,
@@ -36,11 +31,20 @@ export class AuthService {
         )
         .pipe(catchError((error: HttpErrorResponse) => {
             return this.handleSignupLoginError(error)
-        }));
+        }),
+        tap((signupResponsePayload: LoginSignUpResponsePayload) => {
+            this.handleLoginSignup(
+                signupResponsePayload.email,
+                signupResponsePayload.idToken,
+                signupResponsePayload.localId,
+                signupResponsePayload.expiresIn
+            );
+        })
+        );
     }
 
     login(email: string, password: string) {
-        return this.httpClient.post<SignInResponsePayload>(
+        return this.httpClient.post<LoginSignUpResponsePayload>(
             'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyBJRCutoN10m5ocS35VMGem-SJv6cW62r4',
             {
                 email: email,
@@ -50,7 +54,26 @@ export class AuthService {
         )
         .pipe(catchError((error: HttpErrorResponse) => {
             return this.handleSignupLoginError(error)
+        }),
+        tap((signInResponsePayload: LoginSignUpResponsePayload) => {
+            this.handleLoginSignup(
+                signInResponsePayload.email,
+                signInResponsePayload.idToken,
+                signInResponsePayload.localId,
+                signInResponsePayload.expiresIn
+            );
         }))
+    }
+
+    private handleLoginSignup(email: string, token: string, id: string, tokenExpirationDate: string) {
+        const expirationDate = new Date(new Date().getTime() + (Number(tokenExpirationDate) * 1000));
+        const user = new User(
+            email,
+            id,
+            token,
+            expirationDate
+        );
+        this.user.next(user);
     }
 
     private handleSignupLoginError(httpErrorResponse: HttpErrorResponse) {
