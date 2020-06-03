@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { throwError, Subject } from 'rxjs';
+import { throwError, BehaviorSubject } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { User } from './user.model';
 
@@ -16,7 +16,7 @@ class LoginSignUpResponsePayload {
 @Injectable({providedIn: 'root'})
 export class AuthService {
 
-    user: Subject<User>;
+    user = new BehaviorSubject<User>(null);
 
     constructor(private httpClient: HttpClient) {}
 
@@ -39,8 +39,7 @@ export class AuthService {
                 signupResponsePayload.localId,
                 signupResponsePayload.expiresIn
             );
-        })
-        );
+        }));
     }
 
     login(email: string, password: string) {
@@ -62,7 +61,7 @@ export class AuthService {
                 signInResponsePayload.localId,
                 signInResponsePayload.expiresIn
             );
-        }))
+        }));
     }
 
     private handleLoginSignup(email: string, token: string, id: string, tokenExpirationDate: string) {
