@@ -78,6 +78,7 @@ export class AuthService {
     private handleSignupLoginError(httpErrorResponse: HttpErrorResponse) {
         let errorMessage = 'An unknown error ocurred';
         if(!httpErrorResponse.error || !httpErrorResponse.error.error) {
+            console.log('handleSignupLoginError: ' + httpErrorResponse)
             return throwError(errorMessage);
         }
         switch(httpErrorResponse.error.error.message) {

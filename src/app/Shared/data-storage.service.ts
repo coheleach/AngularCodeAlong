@@ -25,22 +25,24 @@ export class DataStorageService {
     }
 
     fetchRecipes() {
-        return this.authService.user.pipe(take(1), exhaustMap(user => {
-            return this.httpClient.get<Recipe[]>(
-                'https://ng-course-recipe-book-ed9b7.firebaseio.com/recipes.json',
-                {
-                    params: new HttpParams().set('auth',user.token)
-                }
-            )
+        // return this.authService.user.pipe(take(1), exhaustMap(user => {
+        //     return this.httpClient.get<Recipe[]>(
+        //         'https://ng-course-recipe-book-ed9b7.firebaseio.com/recipes.json',
+        //         {
+        //             params: new HttpParams().set('auth',user.token)
+        //         })
+        //     }),
+        return this.httpClient.get<Recipe[]>(
+            'https://ng-course-recipe-book-ed9b7.firebaseio.com/recipes.json'
+        )
+        .pipe(map(serverResponseBody => {
+                return serverResponseBody.map(recipeElement => {
+                return {...recipeElement, 
+                    ingredients: recipeElement['ingredients'] ? recipeElement['ingredients'] : []};
+            })
         }),
-        map(serverResponseBody => {
-            return serverResponseBody.map(recipeElement => {
-               return {...recipeElement, 
-                   ingredients: recipeElement['ingredients'] ? recipeElement['ingredients'] : []};
-           })
-       }),
-       tap(recipes => {
-           this.recipesService.setRecipes(recipes);
-       }));
+        tap(recipes => {
+            this.recipesService.setRecipes(recipes);
+        }));
     }
 }
