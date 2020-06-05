@@ -10,6 +10,8 @@ import { RecipeDetailComponent } from './recipes/recipe-detail/recipe-detail.com
 import { RecipeItemComponent } from './recipes/recipe-list/recipe-item/recipe-item.component';
 import { ShoppingListComponent } from './shopping-list/shopping-list.component';
 import { ShoppingEditComponent } from './shopping-list/shopping-edit/shopping-edit.component';
+import { AuthComponent } from './auth/auth.component';
+import { LoadingSpinnerComponent } from './Shared/loading-spinner/loading-spinner.component';
 
 import { DropdownDirective } from './Shared/dropdown.directive';
 import { ShoppingListService } from './shopping-list/shopping-list.service';
@@ -19,8 +21,9 @@ import { SelectRecipeComponent } from './recipes/select-recipe/select-recipe.com
 import { RecipeEditComponent } from './recipes/recipe-edit/recipe-edit.component';
 import { RecipesService } from './recipes/recipes.service';
 
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { RecipesResolverService } from './recipes/recipes-resolver.service';
+import { AuthInterceptorService } from './auth/auth-interceptor.service';
 
 @NgModule({
   declarations: [
@@ -34,7 +37,9 @@ import { RecipesResolverService } from './recipes/recipes-resolver.service';
     ShoppingEditComponent,
     DropdownDirective,
     SelectRecipeComponent,
-    RecipeEditComponent,   
+    RecipeEditComponent,
+    AuthComponent,
+    LoadingSpinnerComponent
     ],
   imports: [
     BrowserModule,
@@ -43,7 +48,16 @@ import { RecipesResolverService } from './recipes/recipes-resolver.service';
     AppRoutingModule,
     HttpClientModule
   ],
-  providers: [ShoppingListService, RecipesService, RecipesResolverService],
+  providers: [
+    ShoppingListService, 
+    RecipesService, 
+    RecipesResolverService,
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptorService,
+      multi: true
+    }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
