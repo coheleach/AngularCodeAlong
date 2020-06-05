@@ -18,6 +18,7 @@ class LoginSignUpResponsePayload {
 export class AuthService {
 
     user = new BehaviorSubject<User>(null);
+    tokenExpirationTimer: any;
 
     constructor(private httpClient: HttpClient,
                 private router: Router) {}
@@ -69,25 +70,44 @@ export class AuthService {
     logout() {
         this.user.next(null);
         this.router.navigate(['/auth']);
+        localStorage.removeItem('userData');
+        if(this.tokenExpirationTimer) {
+            clearTimeout(this.tokenExpirationTimer);
+        }
     }
 
     autoLogin() {
-        const userData: {email: string, id: string, token: string, tokenExpirationDate: string} = JSON.parse(localStorage.getItem('userData'));
+        const userData: {
+            email: string, 
+            id: string, 
+            _token: string, 
+            _tokenExpirationDate: string
+        } = JSON.parse(localStorage.getItem('userData'));
         if(!userData) {
             return;
         }
         const loadedUser = new User(
             userData.email,
             userData.id,
-            userData.token,
-            new Date(userData.tokenExpirationDate)
+            userData._token,
+            new Date(userData._tokenExpirationDate)
         );
-
-        this.user.next(loadedUser);
+        if(loadedUser.token) {
+            this.user.next(loadedUser);
+            this.autoLogout(new Date(userData._tokenExpirationDate));
+        }
     }
 
-    private handleLoginSignup(email: string, token: string, id: string, tokenExpirationDate: string) {
-        const expirationDate = new Date(new Date().getTime() + (Number(tokenExpirationDate) * 1000));
+    autoLogout(expirationDuration: Date) {
+        const milisecondsUntilExpiration = (expirationDuration.getTime() - new Date().getTime());
+        console.log('seconds until auto-logout ' + milisecondsUntilExpiration / 1000);
+        this.tokenExpirationTimer = setTimeout(() => {
+            this.logout();
+        }, milisecondsUntilExpiration);
+    }
+
+    private handleLoginSignup(email: string, token: string, id: string, tokenExpiresIn: string) {
+        const expirationDate = new Date(new Date().getTime() + (Number(tokenExpiresIn) * 1000));
         const user = new User(
             email,
             id,
@@ -96,6 +116,7 @@ export class AuthService {
         );
         this.user.next(user);
         localStorage.setItem('userData', JSON.stringify(user));
+        this.autoLogout(expirationDate);
     }
 
     private handleSignupLoginError(httpErrorResponse: HttpErrorResponse) {
