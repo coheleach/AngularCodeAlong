@@ -3,8 +3,8 @@ import { NgForm } from '@angular/forms';
 import { AuthService } from './auth.service';
 import { Observable, Subscription } from 'rxjs';
 import { Router } from '@angular/router';
-import { AlertComponent } from '../alert/alert.component';
-import { PlaceholderDirective } from '../placeholder/placeholder.directive';
+import { AlertComponent } from '../Shared/alert/alert.component';
+import { PlaceholderDirective } from '../Shared/placeholder/placeholder.directive';
 
 @Component({
     selector: 'app-auth',
@@ -18,13 +18,16 @@ export class AuthComponent implements OnDestroy {
     error = null;
     closeSub: Subscription;
 
-    constructor(private authService: AuthService,
-                private router: Router,
-                private componentFactoryResolver: ComponentFactoryResolver
-                ) {}
+    constructor(
+        private authService: AuthService,
+        private router: Router,
+        private componentFactoryResolver: ComponentFactoryResolver
+    ) {}
 
     ngOnDestroy() {
-        this.closeSub.unsubscribe();
+        if(this.closeSub != null) {
+            this.closeSub.unsubscribe();
+        }
     }
 
     onSwitchMode() {
