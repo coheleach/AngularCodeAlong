@@ -7,6 +7,8 @@ import { CoreModule } from './core.module';
 import { RouterModule } from '@angular/router';
 import { BrowserModule } from '@angular/platform-browser';
 import { SharedModule } from './Shared/shared.module';
+import { StoreModule } from '@ngrx/store';
+import { shoppingListReducer } from '../app/shopping-list/store/shopping-list.reducer';
 
 @NgModule({
   declarations: [
@@ -17,6 +19,9 @@ import { SharedModule } from './Shared/shared.module';
     BrowserModule,
     AppRoutingModule,
     RouterModule,
+    StoreModule.forRoot({
+      shoppingList: shoppingListReducer
+    }),
     HttpClientModule,
     SharedModule,
     CoreModule
