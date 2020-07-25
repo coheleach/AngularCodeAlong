@@ -1,4 +1,4 @@
-import { LOGIN } from './auth.actions';
+import { LOGIN, LOGOUT } from './auth.actions';
 import { User } from '../user.model';
 
 const initialState = { user: null };
@@ -10,9 +10,19 @@ export function AuthReducer(state: State = initialState, action) {
     switch(action.type) {
         case LOGIN:
             return {
-                ...initialState,
-                user: action.payload
-            }
+                ...state,
+                user: new User(
+                    action.payload.email,
+                    action.payload.id,
+                    action.payload.token,
+                    action.payload.expirationDate
+                )
+            };
+        case LOGOUT:
+            return {
+                ...state,
+                user: null
+            };
         default:
             return state;
     }
