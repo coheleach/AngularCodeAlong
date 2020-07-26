@@ -15,7 +15,6 @@ import { exhaustMap, map } from 'rxjs/operators';
 export class HeaderComponent implements OnInit, OnDestroy {
 
   isLoggedIn = false;
-  //private userSubscription: Subscription;
   private user: User;
 
   constructor(
@@ -25,9 +24,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
     ) { }
 
   ngOnInit() {
-    // this.userSubscription = this.authService.user.subscribe(user => {
-    //   this.isLoggedIn = (user ? true : false);
-    // })
     this.store.select('auth').pipe(map(auth => auth.user)).subscribe(user => {
       this.user = user;
     });
