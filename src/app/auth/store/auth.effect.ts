@@ -1,10 +1,11 @@
 import { Actions, ofType, Effect } from '@ngrx/effects';
 import * as fromAuthActions from './auth.actions';
-import { switchMap, catchError, map } from 'rxjs/operators';
+import { switchMap, catchError, map, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { of } from 'rxjs';
 import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 
 class LoginSignUpResponsePayload {
     idToken: string
@@ -56,27 +57,54 @@ export class AuthEffect {
             ).pipe(
                 map((response: LoginSignUpResponsePayload) => {
                     const expirationDate = new Date(new Date().getTime() + (Number(response.expiresIn) * 1000));
-                    return of(
-                        new fromAuthActions.Login(
-                            {
-                                email: response.email,
-                                id: response.localId,
-                                token: response.idToken,
-                                expirationDate: expirationDate
-                            }
-                        )
-                    );
+                    return new fromAuthActions.Login(
+                        {
+                            email: response.email,
+                            id: response.localId,
+                            token: response.idToken,
+                            expirationDate: expirationDate
+                        }
+                    )
                 }),
                 //preserve returned observable
-                catchError(error => {
-                    return of();
+                catchError(httpErrorResponse => {
+                    let errorMessage = 'An unknown error ocurred';
+                    if(!httpErrorResponse.error || !httpErrorResponse.error.error) {
+                        console.log('handleSignupLoginError: ' + httpErrorResponse)
+                        return of(
+                            new fromAuthActions.LoginFail(errorMessage)
+                        );
+                        //return throwError(errorMessage);
+                    }
+                    switch(httpErrorResponse.error.error.message) {
+                        case 'EMAIL_EXISTS':
+                            errorMessage = 'The email address is already in use by another account.';
+                            break;
+                        case 'EMAIL_NOT_FOUND':
+                            errorMessage = 'No account was found with this email';
+                            break;
+                        case 'INVALID_PASSWORD':
+                            errorMessage = 'Incorrect Password'
+                    }
+                    return of(
+                        new fromAuthActions.LoginFail(errorMessage)
+                    );
                 })
             )
         })
     )
 
+    @Effect({dispatch: false})
+    authSuccess = this.actions$.pipe(
+        ofType(fromAuthActions.LOGIN),
+        tap(() => {
+            this.router.navigate(['/']);
+        })
+    );
+
     constructor(
         private actions$: Actions,      // ACTIONS is a stream of dispatched actions.  It cannot complete/die, so preserve it.
-        private httpClient: HttpClient
+        private httpClient: HttpClient,
+        private router: Router
     ) {}
 }
