@@ -5,6 +5,9 @@ import { Observable, Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 import { AlertComponent } from '../Shared/alert/alert.component';
 import { PlaceholderDirective } from '../Shared/placeholder/placeholder.directive';
+import * as fromAppReducer from '../store/app.reducer';
+import * as AuthActions from '../auth/store/auth.actions';
+import { Store } from '@ngrx/store';
 
 @Component({
     selector: 'app-auth',
@@ -21,7 +24,8 @@ export class AuthComponent implements OnDestroy {
     constructor(
         private authService: AuthService,
         private router: Router,
-        private componentFactoryResolver: ComponentFactoryResolver
+        private componentFactoryResolver: ComponentFactoryResolver,
+        private store: Store<fromAppReducer.AppState>
     ) {}
 
     ngOnDestroy() {
@@ -40,7 +44,14 @@ export class AuthComponent implements OnDestroy {
         this.isLoading = true;
         let signupLoginObservable: Observable<any>;
         if(this.isLoginMode) {
-            signupLoginObservable = this.authService.login(form.value.email, form.value.password)    
+            this.store.dispatch(
+                new AuthActions.LoginStart(
+                    {
+                        email: form.value.email, 
+                        password: form.value.password
+                    }
+                )
+            //signupLoginObservable = this.authService.login(form.value.email, form.value.password)    
         } else {
             signupLoginObservable = this.authService.signUp(form.value.email, form.value.password)
         }
