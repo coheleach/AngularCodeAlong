@@ -3,7 +3,8 @@ import { DataStorageService } from '../Shared/data-storage.service';
 import { Subscription, Observable } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { User } from '../auth/user.model';
-import * as fromAppReducer from '../store/app.reducer'
+import * as fromAppReducer from '../store/app.reducer';
+import * as fromAuthActions from '../auth/store/auth.actions';
 import { Store } from '@ngrx/store';
 import { exhaustMap, map } from 'rxjs/operators';
 
@@ -26,6 +27,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.store.select('auth').pipe(map(auth => auth.user)).subscribe(user => {
       this.user = user;
+      if(this.user) {
+        this.isLoggedIn = true;
+      } else {
+        this.isLoggedIn = false;
+      }
     });
   }
   
@@ -42,6 +48,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   onLogout() {
-    this.authService.logout();
+    //this.authService.logout();
+    this.store.dispatch(new fromAuthActions.Logout());
   }
 }

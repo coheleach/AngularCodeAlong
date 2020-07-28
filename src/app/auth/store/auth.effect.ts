@@ -2,10 +2,13 @@ import { Actions, ofType, Effect } from '@ngrx/effects';
 import * as fromAuthActions from './auth.actions';
 import { switchMap, catchError, map, tap } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
-import { HttpClient } from '@angular/common/http';
-import { of } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { of, throwError } from 'rxjs';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
+import { User } from '../user.model';
+import * as fromAppReducer from '../store/auth.reducer';
+import { Store } from '@ngrx/store';
 
 class LoginSignUpResponsePayload {
     idToken: string
@@ -15,6 +18,42 @@ class LoginSignUpResponsePayload {
     localId: string
     registered?: boolean
 }
+
+const handleAuhentication = (email: string, token: string, id: string, tokenExpiresIn: string) => {
+    const expirationDate = new Date(new Date().getTime() + (Number(tokenExpiresIn) * 1000));
+    const userData = new User(
+        email,
+        token,
+        id,
+        expirationDate
+    );
+    localStorage.setItem('userData', JSON.stringify(userData));
+    return new fromAuthActions.AuthenticateSuccess({
+        email: email,
+        id: id,
+        token: token,
+        expirationDate: expirationDate
+    });
+};
+
+const handleError = (httpErrorResponse: HttpErrorResponse) => {
+    let errorMessage = 'An unknown error ocurred';
+    if(!httpErrorResponse.error || !httpErrorResponse.error.error) {
+        console.log('handleSignupLoginError: ' + httpErrorResponse)
+        return throwError(errorMessage);
+    }
+    switch(httpErrorResponse.error.error.message) {
+        case 'EMAIL_EXISTS':
+            errorMessage = 'The email address is already in use by another account.';
+            break;
+        case 'EMAIL_NOT_FOUND':
+            errorMessage = 'No account was found with this email';
+            break;
+        case 'INVALID_PASSWORD':
+            errorMessage = 'Incorrect Password'
+    }
+    return of(new fromAuthActions.AuthenticateFail(errorMessage));
+};
 
 //
 //          REVIEW
@@ -43,6 +82,28 @@ class LoginSignUpResponsePayload {
 export class AuthEffect {
     
     @Effect()
+    authSignUp = this.actions$.pipe(
+        ofType(fromAuthActions.SIGNUP_START),
+        switchMap((signupStart: fromAuthActions.SignupStart) => {
+            return this.httpClient.post<LoginSignUpResponsePayload>(
+                'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' + environment.firebaseAPIKey,
+                {
+                    email: signupStart.payload.email,
+                    password: signupStart.payload.password,
+                    returnSecureToken: true
+                }
+            ).pipe(
+                map((response: LoginSignUpResponsePayload) => {
+                    return handleAuhentication(response.email, response.idToken, response.localId, response.expiresIn);
+                }),
+                catchError((error: HttpErrorResponse) => {
+                    return handleError(error);
+                })
+            );
+        })
+    );
+
+    @Effect()
     authLogin = this.actions$.pipe(
         ofType(fromAuthActions.LOGIN_START),
         //return higher order inner observable
@@ -56,51 +117,64 @@ export class AuthEffect {
                 }
             ).pipe(
                 map((response: LoginSignUpResponsePayload) => {
-                    const expirationDate = new Date(new Date().getTime() + (Number(response.expiresIn) * 1000));
-                    return new fromAuthActions.Login(
-                        {
-                            email: response.email,
-                            id: response.localId,
-                            token: response.idToken,
-                            expirationDate: expirationDate
-                        }
-                    )
+                    return handleAuhentication(response.email, response.idToken, response.localId, response.expiresIn);
                 }),
-                //preserve returned observable
-                catchError(httpErrorResponse => {
-                    let errorMessage = 'An unknown error ocurred';
-                    if(!httpErrorResponse.error || !httpErrorResponse.error.error) {
-                        console.log('handleSignupLoginError: ' + httpErrorResponse)
-                        return of(
-                            new fromAuthActions.LoginFail(errorMessage)
-                        );
-                        //return throwError(errorMessage);
-                    }
-                    switch(httpErrorResponse.error.error.message) {
-                        case 'EMAIL_EXISTS':
-                            errorMessage = 'The email address is already in use by another account.';
-                            break;
-                        case 'EMAIL_NOT_FOUND':
-                            errorMessage = 'No account was found with this email';
-                            break;
-                        case 'INVALID_PASSWORD':
-                            errorMessage = 'Incorrect Password'
-                    }
-                    return of(
-                        new fromAuthActions.LoginFail(errorMessage)
-                    );
+                catchError((error: HttpErrorResponse) => {
+                    return handleError(error);
                 })
             )
         })
     )
 
     @Effect({dispatch: false})
-    authSuccess = this.actions$.pipe(
-        ofType(fromAuthActions.LOGIN),
+    authRedirect = this.actions$.pipe(
+        ofType(fromAuthActions.AUTHENTICATE_SUCCESS, fromAuthActions.LOGOUT),
         tap(() => {
             this.router.navigate(['/']);
         })
     );
+
+    @Effect({dispatch: false})
+    authLogout = this.actions$.pipe(
+        ofType(fromAuthActions.LOGOUT),
+        tap(() => {
+            localStorage.clear();
+            return of();
+        })
+    );
+
+    @Effect()
+    authAutoLogin = this.actions$.pipe(
+        ofType(fromAuthActions.AUTO_LOGIN),
+        map(() => {
+            const userData: {
+                email: string, 
+                id: string, 
+                _token: string, 
+                _tokenExpirationDate: string
+            } = JSON.parse(localStorage.getItem('userData'));
+            if(!userData) {
+                return {type: 'DUMMY'};
+            }
+            const loadedUser = new User(
+                userData.email,
+                userData.id,
+                userData._token,
+                new Date(userData._tokenExpirationDate)
+            );
+            if(loadedUser.token) {
+                return new fromAuthActions.AuthenticateSuccess({
+                    email: loadedUser.email,
+                    id: loadedUser.id,
+                    token: loadedUser.token,
+                    expirationDate: new Date(userData._tokenExpirationDate)
+                });
+                //this.user.next(loadedUser);
+                //this.autoLogout(new Date(userData._tokenExpirationDate));
+            }
+            return {type: 'DUMMY'};
+        })
+    )
 
     constructor(
         private actions$: Actions,      // ACTIONS is a stream of dispatched actions.  It cannot complete/die, so preserve it.

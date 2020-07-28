@@ -52,38 +52,6 @@ export class AuthService {
         }));
     }
 
-    login(email: string, password: string) {
-        return this.httpClient.post<LoginSignUpResponsePayload>(
-            'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + environment.firebaseAPIKey,
-            {
-                email: email,
-                password: password,
-                returnSecureToken: true
-            }
-        )
-        .pipe(catchError((error: HttpErrorResponse) => {
-            return this.handleSignupLoginError(error)
-        }),
-        tap((signInResponsePayload: LoginSignUpResponsePayload) => {
-            this.handleLoginSignup(
-                signInResponsePayload.email,
-                signInResponsePayload.idToken,
-                signInResponsePayload.localId,
-                signInResponsePayload.expiresIn
-            );
-        }));
-    }
-
-    logout() {
-        this.store.dispatch(new fromAuthActions.Logout());
-        //this.user.next(null);
-        this.router.navigate(['/auth']);
-        localStorage.removeItem('userData');
-        if(this.tokenExpirationTimer) {
-            clearTimeout(this.tokenExpirationTimer);
-        }
-    }
-
     autoLogin() {
         const userData: {
             email: string, 
@@ -101,7 +69,7 @@ export class AuthService {
             new Date(userData._tokenExpirationDate)
         );
         if(loadedUser.token) {
-            this.store.dispatch(new fromAuthActions.Login({
+            this.store.dispatch(new fromAuthActions.AuthenticateSuccess({
                 email: loadedUser.email,
                 id: loadedUser.id,
                 token: loadedUser.token,
@@ -116,7 +84,7 @@ export class AuthService {
         const milisecondsUntilExpiration = (expirationDuration.getTime() - new Date().getTime());
         console.log('seconds until auto-logout ' + milisecondsUntilExpiration / 1000);
         this.tokenExpirationTimer = setTimeout(() => {
-            this.logout();
+            //this.logout();
         }, milisecondsUntilExpiration);
     }
 
@@ -128,7 +96,7 @@ export class AuthService {
             token,
             expirationDate
         );
-        this.store.dispatch(new fromAuthActions.Login({
+        this.store.dispatch(new fromAuthActions.AuthenticateSuccess({
             email: email,
             id: id,
             token: token,

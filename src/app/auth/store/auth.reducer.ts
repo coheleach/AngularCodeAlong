@@ -1,4 +1,4 @@
-import { LOGIN, LOGOUT, LOGIN_START, LOGIN_FAIL } from './auth.actions';
+import { AUTHENTICATE_SUCCESS, LOGOUT, LOGIN_START, AUTHENTICATE_FAIL, SIGNUP_START, CLEAR_ERROR } from './auth.actions';
 import { User } from '../user.model';
 
 const initialState = {
@@ -16,7 +16,7 @@ export interface State {
 export function AuthReducer(state: State = initialState, action) {
 
     switch(action.type) {
-        case LOGIN:
+        case AUTHENTICATE_SUCCESS:
             return {
                 ...state,
                 user: new User(
@@ -27,13 +27,19 @@ export function AuthReducer(state: State = initialState, action) {
                 ),
                 loading: false
             };
+        case SIGNUP_START:
+            return {
+                ...state,
+                loading: true,
+                authError: null,
+            }
         case LOGIN_START:
             return {
                 ...state,
                 authError: null,
                 loading: true
             };
-        case LOGIN_FAIL:
+        case AUTHENTICATE_FAIL:
             return {
                 ...state,
                 user: null,
@@ -46,6 +52,11 @@ export function AuthReducer(state: State = initialState, action) {
                 user: null,
                 authError: null
             };
+        case CLEAR_ERROR:
+            return {
+                ...state,
+                authError: null
+            }
         default:
             return state;
     }

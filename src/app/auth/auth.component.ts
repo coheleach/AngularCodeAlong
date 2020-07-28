@@ -30,9 +30,7 @@ export class AuthComponent implements OnInit, OnDestroy {
     ) {}
 
     ngOnInit() {
-        this.store.select('auth').subscribe((authState: fromAuthReducer.State) => {
-            console.log(authState);
-            console.log(authState.authError);
+        this.closeSub = this.store.select('auth').subscribe((authState: fromAuthReducer.State) => {
             this.error = authState.authError,
             this.isLoading = authState.loading
             if(this.error) {
@@ -52,18 +50,14 @@ export class AuthComponent implements OnInit, OnDestroy {
     }
 
     onSubmit(form: NgForm) {
-        
         console.log(form.value);
-        this.isLoading = true;
-        let signupLoginObservable: Observable<any>;
         if(this.isLoginMode) {
             this.store.dispatch(new AuthActions.LoginStart({email: form.value.email, password: form.value.password}));
             //signupLoginObservable = this.authService.login(form.value.email, form.value.password)    
         } else {
-            signupLoginObservable = this.authService.signUp(form.value.email, form.value.password)
+            this.store.dispatch(new AuthActions.SignupStart({email: form.value.email, password: form.value.password}));
+            //signupLoginObservable = this.authService.signUp(form.value.email, form.value.password)
         }
-        //this.signupLoginSubscription(signupLoginObservable);
-        //this.isLoading = false;
         form.reset();
     }
 
@@ -80,7 +74,7 @@ export class AuthComponent implements OnInit, OnDestroy {
     // }
 
     public onHandleError() {
-        this.error = null;
+        this.store.dispatch(new AuthActions.ClearError());
     }
 
     private showErrorAlert(message: string) {
