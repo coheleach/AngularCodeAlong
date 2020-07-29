@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
 import { User } from '../user.model';
 import * as fromAppReducer from '../store/auth.reducer';
 import { Store } from '@ngrx/store';
+import { AuthService } from '../auth.service';
 
 class LoginSignUpResponsePayload {
     idToken: string
@@ -93,6 +94,10 @@ export class AuthEffect {
                     returnSecureToken: true
                 }
             ).pipe(
+                tap((response: LoginSignUpResponsePayload) => {
+                    const expirationDate = new Date(new Date().getTime() + (Number(response.expiresIn) * 1000));
+                    this.authService.setLogoutTimer(expirationDate);
+                }),
                 map((response: LoginSignUpResponsePayload) => {
                     return handleAuhentication(response.email, response.idToken, response.localId, response.expiresIn);
                 }),
@@ -116,6 +121,10 @@ export class AuthEffect {
                     returnSecureToken: true
                 }
             ).pipe(
+                tap((response: LoginSignUpResponsePayload) => {
+                    const expirationDate = new Date(new Date().getTime() + (Number(response.expiresIn) * 1000));
+                    this.authService.setLogoutTimer(expirationDate);
+                }),
                 map((response: LoginSignUpResponsePayload) => {
                     return handleAuhentication(response.email, response.idToken, response.localId, response.expiresIn);
                 }),
@@ -128,7 +137,7 @@ export class AuthEffect {
 
     @Effect({dispatch: false})
     authRedirect = this.actions$.pipe(
-        ofType(fromAuthActions.AUTHENTICATE_SUCCESS, fromAuthActions.LOGOUT),
+        ofType(fromAuthActions.AUTHENTICATE_SUCCESS),
         tap(() => {
             this.router.navigate(['/']);
         })
@@ -138,7 +147,9 @@ export class AuthEffect {
     authLogout = this.actions$.pipe(
         ofType(fromAuthActions.LOGOUT),
         tap(() => {
+            this.authService.clearLogoutTimer();
             localStorage.clear();
+            this.router.navigate(['/auth']);
             return of();
         })
     );
@@ -163,6 +174,7 @@ export class AuthEffect {
                 new Date(userData._tokenExpirationDate)
             );
             if(loadedUser.token) {
+                this.authService.setLogoutTimer(new Date(userData._tokenExpirationDate));
                 return new fromAuthActions.AuthenticateSuccess({
                     email: loadedUser.email,
                     id: loadedUser.id,
@@ -179,6 +191,7 @@ export class AuthEffect {
     constructor(
         private actions$: Actions,      // ACTIONS is a stream of dispatched actions.  It cannot complete/die, so preserve it.
         private httpClient: HttpClient,
-        private router: Router
+        private router: Router,
+        private authService: AuthService
     ) {}
 }
