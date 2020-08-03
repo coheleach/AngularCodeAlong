@@ -14,7 +14,7 @@ export interface State {
 };
 
 export function AuthReducer(state: State = initialState, action) {
-
+    console.log('reducer activated');
     switch(action.type) {
         case AUTHENTICATE_SUCCESS:
             return {
