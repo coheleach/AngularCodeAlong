@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { RecipesService } from '../recipes.service';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { FormGroup, FormControl, FormArray, Validators } from '@angular/forms';
@@ -6,18 +6,21 @@ import { Recipe } from '../recipe.model';
 import { Store } from '@ngrx/store';
 import * as fromAppReducer from '../../store/app.reducer';
 import * as fromRecipesReducer from '../store/recipes.reducer';
+import * as fromRecipesActions from '../store/recipes.actions';
 import { map } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-recipe-edit',
   templateUrl: './recipe-edit.component.html',
   styleUrls: ['./recipe-edit.component.css']
 })
-export class RecipeEditComponent implements OnInit {
+export class RecipeEditComponent implements OnInit, OnDestroy {
 
   editMode = false;
   id: number;
   recipeForm: FormGroup;
+  storeSubscription: Subscription;
 
   get ingredientsAsControls() {
     return (<FormArray>this.recipeForm.get('ingredients')).controls;
@@ -42,6 +45,10 @@ export class RecipeEditComponent implements OnInit {
     )
   }
 
+  ngOnDestroy() {
+    this.storeSubscription.unsubscribe();
+  }
+
   private formInit() {
     let recipeName = '';
     let recipeImagePath = '';
@@ -50,7 +57,7 @@ export class RecipeEditComponent implements OnInit {
 
     if(this.editMode) {
       //const recipe = this.recipesService.getRecipe(this.id);
-      this.store.select('recipes').pipe(
+      this.storeSubscription = this.store.select('recipes').pipe(
         map((recipesState: fromRecipesReducer.State) => {
           return recipesState.recipes.find((recipe, index) => {
             return this.id === index;
@@ -86,24 +93,43 @@ export class RecipeEditComponent implements OnInit {
     console.log(this.recipeForm);
 
     if(this.editMode) {
-      this.recipesService.updateRecipe(
-        new Recipe(
-          this.recipeForm.value.name,
-          this.recipeForm.value.description,
-          this.recipeForm.value.imagePath,
-          this.recipeForm.value.ingredients
-        ),
-        this.id
-      )
+      // this.recipesService.updateRecipe(
+      //   new Recipe(
+      //     this.recipeForm.value.name,
+      //     this.recipeForm.value.description,
+      //     this.recipeForm.value.imagePath,
+      //     this.recipeForm.value.ingredients
+      //   ),
+      //   this.id
+      // )
+      this.store.dispatch(new fromRecipesActions.UpdateRecipe( 
+        {
+          recipe: new Recipe(
+            this.recipeForm.value.name,
+            this.recipeForm.value.description,
+            this.recipeForm.value.imagePath,
+            this.recipeForm.value.ingredients
+          ),
+          index: this.id
+        }
+      ))
     } else {
-      this.recipesService.addRecipe(
+      this.store.dispatch(new fromRecipesActions.AddRecipe(
         new Recipe(
           this.recipeForm.value.name,
           this.recipeForm.value.description,
           this.recipeForm.value.imagePath,
           this.recipeForm.value.ingredients
         )
-      )
+      ))
+      // this.recipesService.addRecipe(
+      //   new Recipe(
+      //     this.recipeForm.value.name,
+      //     this.recipeForm.value.description,
+      //     this.recipeForm.value.imagePath,
+      //     this.recipeForm.value.ingredients
+      //   )
+      // )
     }
 
     this.navigateBack();
