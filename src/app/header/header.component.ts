@@ -7,6 +7,7 @@ import * as fromAppReducer from '../store/app.reducer';
 import * as fromAuthActions from '../auth/store/auth.actions';
 import { Store } from '@ngrx/store';
 import { exhaustMap, map } from 'rxjs/operators';
+import * as fromRecipeActions from '../recipes/store/recipes.actions';
 
 @Component({
   selector: 'app-header',
@@ -44,7 +45,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   onFetchData() {
-    this.dataStorageService.fetchRecipes().subscribe();
+    //this.dataStorageService.fetchRecipes().subscribe();
+    this.store.dispatch(new fromRecipeActions.FetchRecipes());
   }
 
   onLogout() {
