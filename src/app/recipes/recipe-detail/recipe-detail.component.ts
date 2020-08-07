@@ -1,11 +1,11 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { Recipe } from '../recipe.model';
-import { RecipesService } from '../recipes.service';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import * as fromAppReducer from '../../store/app.reducer';
 import * as fromRecipesActions from '../store/recipes.actions';
 import * as fromRecipesReducer from '../store/recipes.reducer';
+import * as fromShoppingListActions from '../../shopping-list/store/shopping-list.actions';
 import { map, tap, exhaustMap, switchMap } from 'rxjs/operators';
 
 @Component({
@@ -19,7 +19,6 @@ export class RecipeDetailComponent implements OnInit {
   id: number
 
   constructor(
-    private recipesService: RecipesService,
     private activatedRoute: ActivatedRoute,
     private router: Router,
     private store: Store<fromAppReducer.AppState>
@@ -58,9 +57,10 @@ export class RecipeDetailComponent implements OnInit {
   }
 
   onAddToShoppingList() {
-    this.recipesService.addIngredientsToShoppingList(
-      this.recipe.ingredients
-    );
+    // this.recipesService.addIngredientsToShoppingList(
+    //   this.recipe.ingredients
+    // );
+    this.store.dispatch(new fromShoppingListActions.AddIngredients(this.recipe.ingredients))
   }
 
   onEditRecipe() {

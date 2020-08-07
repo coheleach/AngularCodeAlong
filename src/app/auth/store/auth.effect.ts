@@ -172,8 +172,8 @@ export class AuthEffect {
             }
             const loadedUser = new User(
                 userData.email,
-                userData.id,
                 userData._token,
+                userData.id,
                 new Date(userData._tokenExpirationDate)
             );
             if(loadedUser.token) {
